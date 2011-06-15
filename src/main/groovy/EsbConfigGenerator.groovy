@@ -66,7 +66,6 @@ class EsbConfigGenerator {
 
   void createBrokerConfig(Broker broker) {
     def filename = "target/${broker.hostName}-broker.xml"
-    println "Creating ${filename}"
     new File(filename).withPrintWriter { writer ->
             brokerTemplate.execute(broker,writer)
     }
@@ -74,7 +73,6 @@ class EsbConfigGenerator {
 
   void createSlaveConfig(Broker broker) {
     def filename = "target/${broker.hostName}-slave.xml"
-    println "Creating ${filename}"
     new File(filename).withPrintWriter { writer ->
             slaveTemplate.execute(broker,writer)
     }
