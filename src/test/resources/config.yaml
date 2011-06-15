@@ -1,0 +1,8 @@
+sites:
+- colo.elex.be
+- erfurt.elex.be
+- sensors.elex.be
+- sofia.elex.be
+nodes:
+- esb-a
+- esb-b

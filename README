@@ -1,0 +1,27 @@
+ESB Configuration Generator
+===========================
+
+We use at melexis a communication grid over the sites.
+
+
+This grid is actually composed of 2 fully meshed networks of brokers which have
+a connection on every site to the local member of the other network. Every site
+has two nodes with a backup configured on the other node.
+
+For N sites this means N + 2 - 2 connections per node.
+
+However this needs a lot of configuration files which are systematically filled
+in. These configuration files are as DRY as the ocean. This is a magnet for
+configuration errors if this is to be done manually.
+
+Since, especially during testing phase, we expect the files to be changed a lot
+we need a practical way to regenerate and distribute them over the grid.
+
+Our cfengine based system works well to distribute the files (albeit rather
+slow).
+
+This script generates the configuration files for the master broker and slave
+broker on every node. The script is slightly ;ore genral in that it allows to
+create M networks of N sites with fully meshed interconnects between the network
+on every site leading to M + N - 2 connections per node.
+

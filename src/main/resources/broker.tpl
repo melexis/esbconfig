@@ -22,7 +22,7 @@
     <!-- Allows us to use system properties as variables in this configuration file -->
     <ext:property-placeholder />
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="brokerA" dataDirectory="${karaf.data}/activemq/brokerA" useShutdownHook="false">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="{{brokerName}}" dataDirectory="${karaf.data}/activemq/{{brokerName}}" useShutdownHook="false">
 
        <!--
             For better performances use VM cursor and small memory limit.

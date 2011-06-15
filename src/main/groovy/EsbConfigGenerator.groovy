@@ -2,6 +2,7 @@
 
 import com.samskivert.mustache.Mustache
 import com.samskivert.mustache.Template
+import org.yaml.snakeyaml.Yaml
 
 /**
  * Generate the configuration files from templates for the ESB Grid
@@ -27,19 +28,20 @@ class PeerBroker {
 
 class EsbConfigGenerator {
 
-  def sites = [
-          'colo.elex.be',
-          'erfurt.elex.be',
-          'sofia.elex.be',
-          'sensors.elex.be'
-  ]
+  def sites = []
 
-  def nodes = ['esb-a', 'esb-b']
+  def nodes = []
   Template brokerTemplate
   Template slaveTemplate
 
 
   EsbConfigGenerator() {
+    def configFileName = 'config.yaml'
+    def configStream = getClass().getClassLoader().getResourceAsStream(configFileName)
+    def config = new Yaml().load(configStream);
+    sites = config['sites']
+    nodes = config['nodes']
+
     brokerTemplate = createTemplateFromResource('broker.tpl')
     slaveTemplate = createTemplateFromResource('slave.tpl')
   }
@@ -63,7 +65,7 @@ class EsbConfigGenerator {
   }
 
   void createBrokerConfig(Broker broker) {
-    def filename = "${broker.hostName}-broker.xml"
+    def filename = "target/${broker.hostName}-broker.xml"
     println "Creating ${filename}"
     new File(filename).withPrintWriter { writer ->
             brokerTemplate.execute(broker,writer)
@@ -71,7 +73,7 @@ class EsbConfigGenerator {
   }
 
   void createSlaveConfig(Broker broker) {
-    def filename = "${broker.hostName}-slave.xml"
+    def filename = "target/${broker.hostName}-slave.xml"
     println "Creating ${filename}"
     new File(filename).withPrintWriter { writer ->
             slaveTemplate.execute(broker,writer)
