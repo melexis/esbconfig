@@ -66,7 +66,7 @@
         <!-- Connection to peers in network of brokers -->
         <networkConnectors>
             {{#peerBrokers}}
-            <networkConnector uri="static:(tcp://{{peerHostName}}:{{peerPort}})"/>
+            <networkConnector name="{{peerHostName}}" uri="static:(tcp://{{peerHostName}}:{{peerPort}})"/>
             {{/peerBrokers}}
         </networkConnectors>
 

@@ -33,7 +33,9 @@ class EsbConfigGenerator {
   def nodes = []
   Template brokerTemplate
   Template slaveTemplate
+  def targetDir
 
+  public def brokers = []
 
   EsbConfigGenerator() {
     def configFileName = 'config.yaml'
@@ -42,13 +44,26 @@ class EsbConfigGenerator {
     sites = config['sites']
     nodes = config['nodes']
 
+    brokers = createBrokers()
+
     brokerTemplate = createTemplateFromResource('broker.tpl')
     slaveTemplate = createTemplateFromResource('slave.tpl')
+    targetDir = "target/"
   }
 
   static void main(String[] args) {
     EsbConfigGenerator generator = new EsbConfigGenerator()
     generator.generateConfigFiles()
+  }
+
+  public createBrokers() {
+
+    for (site in sites) {
+      for (node in nodes) {
+        def broker = createBroker(site, node)
+        brokers.add(broker)
+      }
+    }
   }
 
   public generateConfigFiles() {
@@ -57,24 +72,16 @@ class EsbConfigGenerator {
       for (node in nodes) {
         def broker = createBroker(site, node)
 
-        createBrokerConfig(broker);
-        createSlaveConfig(broker);
+        generateConfigFile("master", brokerTemplate, broker)
+        generateConfigFile("slave", slaveTemplate, broker)
 
       }
     }
   }
-
-  void createBrokerConfig(Broker broker) {
-    def filename = "target/${broker.hostName}-broker.xml"
+  private def generateConfigFile(variant, Template template, Broker broker) {
+    def filename = "target/${broker.hostName}-${variant}.xml"
     new File(filename).withPrintWriter { writer ->
-            brokerTemplate.execute(broker,writer)
-    }
-  }
-
-  void createSlaveConfig(Broker broker) {
-    def filename = "target/${broker.hostName}-slave.xml"
-    new File(filename).withPrintWriter { writer ->
-            slaveTemplate.execute(broker,writer)
+      template.execute(broker, writer)
     }
   }
 
@@ -114,7 +121,7 @@ class EsbConfigGenerator {
   }
 
   private String getNodeCode(String node) {
-    return node[-1].toUpperCase()
+    return node[4].toUpperCase()
   }
 
   int getNodeOffset(String node) {

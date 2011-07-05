@@ -1,3 +1,6 @@
 esb-*.xml
 target
 esbconfig.iml
+.idea
+.idea_modules
+project/boot

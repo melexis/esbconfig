@@ -4,5 +4,5 @@ sites:
 - sensors.elex.be
 - sofia.elex.be
 nodes:
-- esb-a
-- esb-b
+- esb-a-test
+- esb-b-test
