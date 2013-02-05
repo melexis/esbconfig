@@ -66,8 +66,12 @@
         <!-- Connection to peers in network of brokers -->
         <networkConnectors>
             {{#peerBrokers}}
-            <networkConnector name="{{peerHostName}}" uri="static:(tcp://{{peerHostName}}:{{peerPort}})"/>
-            {{/peerBrokers}}
+            <networkConnector name="{{peerHostName}}" uri="static:(tcp://{{peerHostName}}:{{peerPort}})">
+	      	<excludedDestinations>
+   	  	  <queue physicalName="Consumer.*.VirtualTopic.>"/>
+      		</excludedDestinations>
+            </networkConnector>
+	    {{/peerBrokers}}
         </networkConnectors>
 
 
