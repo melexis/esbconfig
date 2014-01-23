@@ -1,0 +1,18 @@
+sites:
+- colo.elex.be
+- erfurt.elex.be
+- sensors.elex.be
+- sofia.elex.be
+nodes:
+- esb-a
+- esb-b
+envs:
+  test:
+    prefix: -test
+    datasourcePassword: EvAfvec3
+  uat:
+    prefix: -uat
+    datasourcePassword: EvAfvec3
+  prod:
+    prefix: 
+    datasourcePassword: UfucBeyd

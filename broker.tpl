@@ -66,78 +66,37 @@
         <!-- Connection to peers in network of brokers -->
         <networkConnectors>
             {{#peerBrokers}}
-            <networkConnector name="{{peerHostName}}" uri="static:(tcp://{{peerHostName}}:{{peerPort}})">
-	      	<excludedDestinations>
-   	  	  <queue physicalName="Consumer.*.VirtualTopic.>"/>
-      		</excludedDestinations>
+            <networkConnector name="{{siteName}}" uri="static:failover:({{failoverBrokers}})">
+	      	    <excludedDestinations>
+   	  	            <queue physicalName="Consumer.*.VirtualTopic.>"/>
+        		</excludedDestinations>
             </networkConnector>
 	    {{/peerBrokers}}
         </networkConnectors>
-
-
-        <!--
-            Configure message persistence for the broker. The default persistence
-            mechanism is the KahaDB store (identified by the kahaDB tag).
-            For more information, see:
-
-            http://activemq.apache.org/persistence.html
-        -->
-        <persistenceAdapter>
-            <kahaDB directory="${karaf.data}/activemq/{{brokerName}}/kahadb"/>
-        </persistenceAdapter>
-
-       <!--
-            The systemUsage controls the maximum amount of space the broker will
-            use before slowing down producers. For more information, see:
-
-            http://activemq.apache.org/producer-flow-control.html
-
-        <systemUsage>
-            <systemUsage>
-                <memoryUsage>
-                    <memoryUsage limit="20 mb"/>
-                </memoryUsage>
-                <storeUsage>
-                    <storeUsage limit="1 gb" name="foo"/>
-                </storeUsage>
-                <tempUsage>
-                    <tempUsage limit="100 mb"/>
-                </tempUsage>
-            </systemUsage>
-        </systemUsage>
-        -->
 
         <!-- The transport connectors ActiveMQ will listen to -->
         <transportConnectors>
             <transportConnector name="openwire" uri="tcp://{{hostName}}:{{openwirePort}}"/>
             <transportConnector name="stomp" uri="stomp://{{hostName}}:{{stompPort}}"/>
         </transportConnectors>
-
     </broker>
 
-    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-
-        <property name="brokerURL" value="tcp://{{hostName}}:{{openwirePort}}" />
+    <bean id="activemq-ds" class="org.postgresql.ds.PGPoolingDataSource">
+        <property name="serverName" value="postgresql-test.colo.elex.be"/>
+        <property name="databaseName" value="activemq_{{siteName}}"/>
+        <property name="portNumber" value="5432"/>
+        <property name="user" value="activemq"/>
+        <property name="password" value="{{dsPassword}}"/>
+        <property name="initialConnections" value="1"/>
+        <property name="maxConnections" value="10"/>
     </bean>
 
-    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
-        <property name="maxConnections" value="8" />
-        <property name="connectionFactory" ref="activemqConnectionFactory" />
-    </bean>
-
-    <bean id="resourceManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
-          <property name="transactionManager" ref="transactionManager" />
-          <property name="connectionFactory" ref="activemqConnectionFactory" />
-          <property name="resourceName" value="activemq.{{brokerName}}" />
-    </bean>
-
-    <reference id="transactionManager" interface="javax.transaction.TransactionManager" />
-
-    <service ref="pooledConnectionFactory" interface="javax.jms.ConnectionFactory">
-        <service-properties>
-            <entry key="name" value="{{hostName}}"/>
-        </service-properties>
-    </service>
+    <persistenceAdapter>
+        <jdbcPersistenceAdapter dataDirectory="activemq-data" dataSource="#activemq-ds">
+             <databaseLocker>
+                 <database-locker queryTimeout="-1" />
+             </databaseLocker>
+        </jdbcPersistenceAdapter>
+   </persistenceAdapter>
 
 </blueprint>
-

@@ -28,19 +28,9 @@ on every site leading to M + N - 2 connections per node.
 Usage
 -----
 
-The script is built using maven to recompile and run. Whenever the templates,
-configuration or script is changed, it must be compiled as the templates and
-config is loaded from the classpath as resources.
+The script runs using groovy. 
 
-    $> mvn compile
-
-This will compile the groovy classes.
-
-    $> mvn test
-
-This will run the unit tests
-
-    $> mvn exec:java
+    $> groovy configgenerator.groovy
 
 This will run the compiled groovy code and generate the configuration files in
 the target directory.
