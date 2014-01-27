@@ -93,9 +93,9 @@ def main():
     if testbranch is not None:
         put_config_in_new_branch(cfenginepath, testbranch, 'origin/TEST', 'test', 'masterfiles/files/esb')
     if uatbranch is not None:
-        put_config_in_new_branch(cfenginepath, testbranch, 'origin/UAT', 'uat', 'masterfiles/files/esb')
+        put_config_in_new_branch(cfenginepath, uatbranch, 'origin/UAT', 'uat', 'masterfiles/files/esb')
     if prodbranch != None:
-        put_config_in_new_branch(cfenginepath, testbranch, 'origin/STABLE', 'uat', 'masterfiles/files/esb')
+        put_config_in_new_branch(cfenginepath, prodbranch, 'origin/STABLE', 'uat', 'masterfiles/files/esb')
 
 if __name__ == '__main__':
     main()
