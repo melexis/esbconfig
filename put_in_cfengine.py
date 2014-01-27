@@ -58,6 +58,7 @@ def put_config_in_new_branch(cfenginepath, branch, base, filter, destination):
     files_to_copy = filenames_for_env(files, filter)
     for f in files_to_copy:
         shutil.copyfile(f, cfenginepath + '/' + destination)
+    git('add %s' % cfenginepath + '/' + destination + 'esb-*-masterslave.xml')
     git('commit -a -m "Updated config files for activemq"')
 
 def test():
