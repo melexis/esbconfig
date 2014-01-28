@@ -53,3 +53,11 @@ There are 2 templates :
  format is self explanatory, but more details can be found on the
  [YAML homepage](http://yaml.org/).
 
+Cfengine
+--------
+
+To put the configuration files in cfengine you can use the put_in_cfengine script:
+
+    $> python put_in_cfengine.py --testbranch=RFC-8972_TEST --uatbranch=RFC-8972_UAT --prodbranch=RFC-8972_STABLE --cfenginepath=../cfengine
+
+This will create 3 branches with the respective files in it.

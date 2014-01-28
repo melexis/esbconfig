@@ -54,12 +54,15 @@ def checkout_cfengine_branch(cfenginepath, branch, base):
 
 def put_config_in_new_branch(cfenginepath, branch, base, filter, destination):
     checkout_cfengine_branch(cfenginepath, branch, base)
-    files = os.listdir('target')
+    files = ['target/' + filename for filename in os.listdir('target')]
     files_to_copy = filenames_for_env(files, filter)
     for f in files_to_copy:
-        shutil.copyfile(f, cfenginepath + '/' + destination)
-    git('add %s' % cfenginepath + '/' + destination + 'esb-*-masterslave.xml')
-    git('commit -a -m "Updated config files for activemq"')
+        target = cfenginepath + '/' + destination
+        shutil.copy(f, target)
+        filename = f.split('/')[-1]
+        filepath = destination + '/' + filename
+        git('add %s' % filepath, cfenginepath)
+    git('commit -a -m "Updated config files for activemq"', cfenginepath)
 
 def test():
     import doctest
@@ -92,11 +95,28 @@ def main():
     git('fetch origin', cfenginepath)
 
     if testbranch is not None:
-        put_config_in_new_branch(cfenginepath, testbranch, 'origin/TEST', 'test', 'masterfiles/files/esb')
+        put_config_in_new_branch(
+                cfenginepath, 
+                testbranch, 
+                'origin/TEST', 
+                '-test', 
+                'masterfiles/files/esb')
+
     if uatbranch is not None:
-        put_config_in_new_branch(cfenginepath, uatbranch, 'origin/UAT', 'uat', 'masterfiles/files/esb')
-    if prodbranch != None:
-        put_config_in_new_branch(cfenginepath, prodbranch, 'origin/STABLE', 'uat', 'masterfiles/files/esb')
+        put_config_in_new_branch(
+                cfenginepath, 
+                uatbranch, 
+                'origin/UAT', 
+                '-uat', 
+                'masterfiles/files/esb')
+
+    if prodbranch is not  None:
+        put_config_in_new_branch(
+                cfenginepath, 
+                prodbranch, 
+                'origin/STABLE', 
+                '', 
+                'masterfiles/files/esb')
 
 if __name__ == '__main__':
     main()
