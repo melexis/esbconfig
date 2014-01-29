@@ -120,11 +120,6 @@ class EsbConfigGenerator {
     targetDir = "target/"
   }
 
-  static void main(String[] args) {
-    EsbConfigGenerator generator = new EsbConfigGenerator()
-    generator.generateConfigFiles()
-  }
-
   public createBrokers() {
     for (env in envs) {
       for (site in sites) {
@@ -148,7 +143,7 @@ class EsbConfigGenerator {
     }
   }
   private def generateConfigFile(variant, Template template, Broker broker) {
-    def destination = new File("target")
+    def destination = new File(targetDir)
     if (!destination.exists()) { destination.mkdir() }
     def filename = "target/${broker.hostName}-${variant}.xml"
     println("Writing to file ${filename}")
@@ -223,8 +218,8 @@ class EsbConfigGenerator {
 
 def main() {
   println("running")
-    EsbConfigGenerator generator = new EsbConfigGenerator()
-    generator.generateConfigFiles()
+  EsbConfigGenerator generator = new EsbConfigGenerator()
+  generator.generateConfigFiles()
 }
 
 main()

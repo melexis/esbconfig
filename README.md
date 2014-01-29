@@ -43,12 +43,11 @@ read and write and makes adding business logic to templates near impossible.
 The bits between {{ and }} are replaced by the passed object in the script, in
 this case a Broker object from the groovy script.
 
-There are 2 templates :
+There is 1 template :
 
- - **src/main/resources/broker.tpl** for the master config of a node
- - **src/main/resources/slace.tpl** for the slave running on this node
+ - **broker.tpl** for the master config of a node
 
- The configuration of the grid is in **src/main/resources/config.yaml. This is
+ The configuration of the grid is in **config.yaml**. This is
  a YAML file which contains the sites (as network part of the domain name). The
  format is self explanatory, but more details can be found on the
  [YAML homepage](http://yaml.org/).
