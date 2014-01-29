@@ -66,7 +66,7 @@
         <!-- Connection to peers in network of brokers -->
         <networkConnectors>
             {{#peerBrokers}}
-            <networkConnector name="{{siteName}}" uri="static:failover:({{failoverBrokers}})">
+            <networkConnector name="{{site}}" uri="static:failover:({{failoverBrokers}})">
 	      	    <excludedDestinations>
    	  	            <queue physicalName="Consumer.*.VirtualTopic.>"/>
         		</excludedDestinations>
@@ -79,6 +79,15 @@
             <transportConnector name="openwire" uri="tcp://{{hostName}}:{{openwirePort}}"/>
             <transportConnector name="stomp" uri="stomp://{{hostName}}:{{stompPort}}"/>
         </transportConnectors>
+    
+        <persistenceAdapter>
+            <jdbcPersistenceAdapter dataDirectory="activemq-data" dataSource="#activemq-ds">
+                 <databaseLocker>
+                     <database-locker queryTimeout="-1" />
+                 </databaseLocker>
+            </jdbcPersistenceAdapter>
+        </persistenceAdapter>
+
     </broker>
 
     <bean id="activemq-ds" class="org.postgresql.ds.PGPoolingDataSource">
@@ -90,13 +99,5 @@
         <property name="initialConnections" value="1"/>
         <property name="maxConnections" value="10"/>
     </bean>
-
-    <persistenceAdapter>
-        <jdbcPersistenceAdapter dataDirectory="activemq-data" dataSource="#activemq-ds">
-             <databaseLocker>
-                 <database-locker queryTimeout="-1" />
-             </databaseLocker>
-        </jdbcPersistenceAdapter>
-   </persistenceAdapter>
 
 </blueprint>

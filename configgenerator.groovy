@@ -25,8 +25,8 @@ class Broker {
 
   def hostName
   def brokerName
-  int openwirePort = 60501
-  int stompPort = 60601
+  int openwirePort = 61601
+  int stompPort = 61501
   def peerBrokers
   def failoverPeerBrokers
   def slaveHostName
