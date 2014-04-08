@@ -33,6 +33,7 @@ class Broker {
   def env
   def site
   def dsPassword
+  def prefix
 
   def siteName() {
     SITE_MAPPING.get(site)
@@ -48,6 +49,7 @@ class Broker {
          slaveHostName: ${slaveHostName},
          env: ${env},
          site: ${site},
+         prefix: ${prefix},
          dsPassword: ${dsPassword}
        }"""
   }
@@ -61,6 +63,12 @@ class PeerBroker {
     this.peerHostName = peerHostName
     this.peerPort = peerPort
   }
+
+  String toString() {
+    """{ peerHostName: ${peerHostName},
+         peerPort: ${peerPort}
+       }"""
+  }
 }
 
 class Peer {
@@ -73,7 +81,13 @@ class Peer {
   }
 
   def failoverBrokers() {
-    this.brokers.collect { "${it.peerHostName}:${it.peerPort}" }.join(',')
+    this.brokers.collect { "tcp://${it.peerHostName}:${it.peerPort}" }.join(',')
+  }
+
+  String toString() {
+    """{ site: ${site},
+         brokers: ${brokers}
+       }"""
   }
 }
 
@@ -95,8 +109,6 @@ class EsbConfigGenerator {
 
   def sites = []
   def nodes = []
-  Template brokerTemplate
-  Template slaveTemplate
   def targetDir
   def envs = []
   def openwirePort = 61601
@@ -110,39 +122,58 @@ class EsbConfigGenerator {
 
     sites = config['sites']
     nodes = config['nodes']
-    envs = config['envs'].values().collect { env ->
-        def prefix = env['prefix'] == null? '': env['prefix']
-        new Environment(prefix, env['datasourcePassword']) 
+
+    brokers = config['brokers'].collectEntries { k, b ->
+        b['envs'] = b['envs'].values().collect { env ->
+            def prefix = env['prefix'] == null? '': env['prefix']
+            new Environment(prefix, env['datasourcePassword'])
+        }
+        [k, b]
     }
 
-
-    brokerTemplate = createTemplateFromResource('broker.tpl')
     targetDir = "target/"
   }
 
   public createBrokers() {
-    for (env in envs) {
-      for (site in sites) {
-        for (node in nodes) {
-          def broker = createBroker(site, node, env)
-          brokers.add(broker)
+    for (b in brokers) {
+      brokertype = b.key
+      template = b.value['template']
+      openwirePort = b.value['openwirePort']
+      stompPort = b.value['stompPort']
+      for (env in b.value['envs']) {
+        for (site in sites) {
+          for (node in nodes) {
+            def broker = createBroker(site, node, env, template, openwirePort, stompPort, b.value['brokername'])
+            brokers.add(broker)
+          }
         }
       }
     }
   }
 
   public generateConfigFiles() {
-    for (env in envs) {
-      for (site in sites) {
-	    for (node in nodes) {
-	        def broker = createBroker(site, node, env)
+    println("Brokers: ${brokers}")
+    for (b in brokers) {
+      def templateName = b.value['template']
+      def template = createTemplateFromResource(templateName)
+      def brokername = b.value['brokername']
+      def openwirePort = b.value['openwirePort']
+      def stompPort = b.value['stompPort']
 
-	        generateConfigFile("masterslave", brokerTemplate, broker)
+      println("Broker: ${b}")
+      for (env in b.value['envs']) {
+        for (site in sites) {
+	      for (node in nodes) {
+              println "ENV: ${env}"
+	          def broker = createBroker(site.value['domain'], node, env, template, openwirePort, stompPort, b.value['brokername'])
+              println "Broker: ${broker.siteName()}"
+	          generateConfigFile(b.key, template, broker, brokername)
+          }
 	    }
       }
     }
   }
-  private def generateConfigFile(variant, Template template, Broker broker) {
+  private def generateConfigFile(String variant, Template template, Broker broker, String brokername) {
     def destination = new File(targetDir)
     if (!destination.exists()) { destination.mkdir() }
     def filename = "target/${broker.hostName}-${variant}.xml"
@@ -159,16 +190,27 @@ class EsbConfigGenerator {
     return template
   }
 
-  def createBroker(String site, String node, Environment env) {
+  def createBroker(String site, String node, 
+                  Environment env, Template template, 
+                  openwirePort, stompPort, brokerName) {
     def broker = new Broker()
+    def prefix = env.prefix
+
+    println "ENV 2: ${env} ${env.prefix} " + prefix.getClass().getName()
 
     broker.hostName = "${node}${env.prefix}.${site}"
-    broker.brokerName = "broker" + getNodeCode(node)
-    broker.peerBrokers = getRemotePeers(site, env.prefix)
-    broker.slaveHostName = getSlaveHostName(node, site, env.prefix)
+
+    println "HOSTNAME : ${broker.hostName}"
+
+    broker.brokerName = brokerName
+    broker.peerBrokers = getRemotePeers(site, prefix)
+    broker.slaveHostName = getSlaveHostName(node, site, prefix)
     broker.env = env
     broker.site = site
     broker.dsPassword = env.datasourcePassword
+    broker.prefix = env.prefix
+    broker.openwirePort = openwirePort
+    broker.stompPort = stompPort
 
     return broker
   }
@@ -187,30 +229,16 @@ class EsbConfigGenerator {
     return getNodeCode(node).charAt(0) - 64
   }
 
-  def List<PeerBroker> getLocalPeers(String site, String node, String env) {
-    def localPeers = []
-
-    for (peer in this.nodes) {
-      if (peer != node) {
-        PeerBroker peerBroker = new PeerBroker();
-        peerBroker.peerHostName = "${peer}${env}.${site}"
-        peerBroker.peerPort = 61601
-        localPeers.add(peerBroker)
-      }
-    }
-    return localPeers
-  }
-
-  def List<Peer> getRemotePeers(String site, String env) {
+  def List<Peer> getRemotePeers(String site, String prefix) {
     def remotePeers = []
-
     def remoteSites = this.sites.findAll { it != site }
-    remoteSites.collect { peer ->
+    remoteSites.collect { remoteSite ->
+            def domain = remoteSite.getValue()['domain']
             def failoverPeers = this.nodes.collect { node ->
-                def peerBroker = new PeerBroker("${node}${env}.${peer}", openwirePort)
+                def peerBroker = new PeerBroker("${node}${prefix}.${domain}", openwirePort)
                 peerBroker
             }
-            new Peer(peer, failoverPeers)
+            new Peer(domain, failoverPeers)
     }
   }
 

@@ -1,18 +1,53 @@
 sites:
-- colo.elex.be
-- erfurt.elex.be
-- sensors.elex.be
-- sofia.elex.be
+  colo:
+    domain: colo.elex.be
+    database: 
+      hostname: postgresql${env}.colo.elex.be
+  erfurt:
+    domain: erfurt.elex.be
+    database:
+      hostname: postgresql${env}.erfurt.elex.be
+  ieper:
+    domain: sensors.elex.be
+    database:
+      hostname: postgresql${env}.sensors.elex.be
+  sofia:
+    domain: sofia.elex.be
+    database:
+      hostname: postgresql${env}.sofia.elex.be
+
 nodes:
 - esb-a
 - esb-b
-envs:
-  test:
-    prefix: -test
-    datasourcePassword: EvAfvec3
-  uat:
-    prefix: -uat
-    datasourcePassword: EvAfvec3
-  prod:
-    prefix: 
-    datasourcePassword: UfucBeyd
+
+brokers:
+  global:
+    template: global.tpl
+    brokername: activemq-global
+    openwirePort: 61601
+    stompPort: 61501
+    envs:
+      test:
+        prefix: -test
+        datasourcePassword: EvAfvec3
+      uat:
+        prefix: -uat
+        datasourcePassword: EvAfvec3
+      prod:
+        prefix: 
+        datasourcePassword: UfucBeyd
+  local:
+    template: local.tpl
+    brokername: activemq-local
+    openwirePort: 61602
+    stompPort: 61502
+    envs:
+      test:
+        prefix: -test
+        datasourcePassword: abc123
+      uat:
+        prefix: -uat
+        datasourcePassword: abc123
+      prod:
+        prefix: 
+        datasourcePassword: abc123

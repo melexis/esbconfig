@@ -67,9 +67,6 @@
         <networkConnectors>
             {{#peerBrokers}}
             <networkConnector name="{{site}}" uri="static:failover:({{failoverBrokers}})">
-	      	    <excludedDestinations>
-   	  	            <queue physicalName="Consumer.*.VirtualTopic.>"/>
-        		</excludedDestinations>
             </networkConnector>
 	    {{/peerBrokers}}
         </networkConnectors>
@@ -91,7 +88,7 @@
     </broker>
 
     <bean id="activemq-ds" class="org.postgresql.ds.PGPoolingDataSource">
-        <property name="serverName" value="postgresql-test.colo.elex.be"/>
+        <property name="serverName" value="postgresql{{prefix}}.colo.elex.be"/>
         <property name="databaseName" value="activemq_{{siteName}}"/>
         <property name="portNumber" value="5432"/>
         <property name="user" value="activemq"/>
