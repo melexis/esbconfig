@@ -15,6 +15,10 @@ sites:
     domain: sofia.elex.be
     database:
       hostname: postgresql${env}.sofia.elex.be
+  kuching:
+    domain: kuching.elex.be
+    database:
+      hostname: postgresql${env}.kuching.elex.be
 
 nodes:
 - esb-a
