@@ -66,7 +66,7 @@
         <!-- Connection to peers in network of brokers -->
         <networkConnectors>
             {{#peerBrokers}}
-            <networkConnector name="{{site}}" uri="static:failover:({{failoverBrokers}})">
+            <networkConnector name="{{siteName}}" uri="static:failover:({{failoverBrokers}})">
             </networkConnector>
 	    {{/peerBrokers}}
         </networkConnectors>
