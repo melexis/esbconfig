@@ -66,7 +66,7 @@
         <!-- Connection to peers in network of brokers -->
         <networkConnectors>
             {{#peerBrokers}}
-            <networkConnector name="{{siteName}}" uri="static:failover:({{failoverBrokers}})">
+            <networkConnector name="{{site}}" uri="static:failover:({{failoverBrokers}})">
             </networkConnector>
 	    {{/peerBrokers}}
         </networkConnectors>
@@ -88,8 +88,8 @@
     </broker>
 
     <bean id="activemq-ds" class="org.postgresql.ds.PGPoolingDataSource">
-        <property name="serverName" value="postgresql{{prefix}}.colo.elex.be"/>
-        <property name="databaseName" value="activemq_{{siteName}}"/>
+        <property name="serverName" value="{{dbHostname}}"/>
+        <property name="databaseName" value="activemq_{{siteName}}_global"/>
         <property name="portNumber" value="5432"/>
         <property name="user" value="activemq"/>
         <property name="password" value="{{dsPassword}}"/>

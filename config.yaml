@@ -18,7 +18,7 @@ sites:
   kuching:
     domain: kuching.elex.be
     database:
-      hostname: postgresql${env}.kuching.elex.be
+      hostname: postgresql${env}.colo.elex.be
 
 nodes:
 - esb-a
@@ -28,8 +28,8 @@ brokers:
   global:
     template: global.tpl
     brokername: activemq-global
-    openwirePort: 61601
-    stompPort: 61501
+    openwirePort: 61602
+    stompPort: 61502
     envs:
       test:
         prefix: -test
@@ -43,15 +43,15 @@ brokers:
   local:
     template: local.tpl
     brokername: activemq-local
-    openwirePort: 61602
-    stompPort: 61502
+    openwirePort: 61601
+    stompPort: 61501
     envs:
       test:
         prefix: -test
-        datasourcePassword: abc123
+        datasourcePassword: EvAfvec3
       uat:
         prefix: -uat
-        datasourcePassword: abc123
+        datasourcePassword: EvAfvec3
       prod:
         prefix: 
-        datasourcePassword: abc123
+        datasourcePassword: UfucBeyd

@@ -80,7 +80,7 @@
     </broker>
 
     <bean id="activemq-ds" class="org.postgresql.ds.PGPoolingDataSource">
-        <property name="serverName" value="postgresql{{prefix}}.colo.elex.be"/>
+        <property name="serverName" value="{{dbHostname}}"/>
         <property name="databaseName" value="activemq_{{siteName}}"/>
         <property name="portNumber" value="5432"/>
         <property name="user" value="activemq"/>

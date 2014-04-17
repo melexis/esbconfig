@@ -16,16 +16,16 @@ import java.io.File
  * repetitive. So we automate it.
  */
 
-
 class Broker {
-  static def SITE_MAPPING = [ 'sensors.elex.be': 'ieper'
-                            , 'sofia.elex.be': 'sofia'
-                            , 'erfurt.elex.be': 'erfurt'
-                            , 'colo.elex.be': 'diegem' ]
+  def SITE_MAPPING = [ 'sensors.elex.be': 'ieper'
+                     , 'sofia.elex.be': 'sofia'
+                     , 'erfurt.elex.be': 'erfurt'
+                     , 'colo.elex.be': 'diegem'
+                     , 'kuching.elex.be': 'kuching' ]
 
   def hostName
   def brokerName
-  int openwirePort = 61601
+  int openwirePort
   int stompPort = 61501
   def peerBrokers
   def failoverPeerBrokers
@@ -34,6 +34,7 @@ class Broker {
   def site
   def dsPassword
   def prefix
+  def dbHostname
 
   def siteName() {
     SITE_MAPPING.get(site)
@@ -50,7 +51,8 @@ class Broker {
          env: ${env},
          site: ${site},
          prefix: ${prefix},
-         dsPassword: ${dsPassword}
+         dsPassword: ${dsPassword},
+         dbHostname: ${dbHostname}
        }"""
   }
 }
@@ -72,6 +74,11 @@ class PeerBroker {
 }
 
 class Peer {
+  def SITE_MAPPING = [ 'sensors.elex.be': 'ieper'
+                     , 'sofia.elex.be': 'sofia'
+                     , 'erfurt.elex.be': 'erfurt'
+                     , 'colo.elex.be': 'diegem'
+                     , 'kuching.elex.be': 'kuching' ]
   def site
   def brokers
 
@@ -82,6 +89,10 @@ class Peer {
 
   def failoverBrokers() {
     this.brokers.collect { "tcp://${it.peerHostName}:${it.peerPort}" }.join(',')
+  }
+
+  def peerSiteName() {
+    SITE_MAPPING.get(this.brokers[0].peerHostName)
   }
 
   String toString() {
@@ -143,7 +154,7 @@ class EsbConfigGenerator {
       for (env in b.value['envs']) {
         for (site in sites) {
           for (node in nodes) {
-            def broker = createBroker(site, node, env, template, openwirePort, stompPort, b.value['brokername'])
+            def broker = createBroker(site, node, env, template, openwirePort, stompPort, b.value['brokername'], evalTemplate(site.value['database']['hostname'], ['env': env.prefix]))
             brokers.add(broker)
           }
         }
@@ -151,22 +162,23 @@ class EsbConfigGenerator {
     }
   }
 
+  def evalTemplate(template, bindings) {
+    def template1 = "\"" + template + "\""
+    return new GroovyShell(new Binding(bindings)).evaluate(template1)
+  }
+
   public generateConfigFiles() {
-    println("Brokers: ${brokers}")
     for (b in brokers) {
       def templateName = b.value['template']
       def template = createTemplateFromResource(templateName)
       def brokername = b.value['brokername']
-      def openwirePort = b.value['openwirePort']
+      openwirePort = b.value['openwirePort']
       def stompPort = b.value['stompPort']
 
-      println("Broker: ${b}")
       for (env in b.value['envs']) {
         for (site in sites) {
 	      for (node in nodes) {
-              println "ENV: ${env}"
-	          def broker = createBroker(site.value['domain'], node, env, template, openwirePort, stompPort, b.value['brokername'])
-              println "Broker: ${broker.siteName()}"
+	          def broker = createBroker(site.value['domain'], node, env, template, openwirePort, stompPort, b.value['brokername'], evalTemplate(site.value['database']['hostname'], ['env': env.prefix]))
 	          generateConfigFile(b.key, template, broker, brokername)
           }
 	    }
@@ -192,18 +204,14 @@ class EsbConfigGenerator {
 
   def createBroker(String site, String node, 
                   Environment env, Template template, 
-                  openwirePort, stompPort, brokerName) {
+                  openwirePort, stompPort, brokerName, dbHostname) {
     def broker = new Broker()
     def prefix = env.prefix
 
-    println "ENV 2: ${env} ${env.prefix} " + prefix.getClass().getName()
-
     broker.hostName = "${node}${env.prefix}.${site}"
 
-    println "HOSTNAME : ${broker.hostName}"
-
     broker.brokerName = brokerName
-    broker.peerBrokers = getRemotePeers(site, prefix)
+    broker.peerBrokers = getRemotePeers(site, prefix, openwirePort)
     broker.slaveHostName = getSlaveHostName(node, site, prefix)
     broker.env = env
     broker.site = site
@@ -211,6 +219,8 @@ class EsbConfigGenerator {
     broker.prefix = env.prefix
     broker.openwirePort = openwirePort
     broker.stompPort = stompPort
+    broker.dbHostname = dbHostname
+
 
     return broker
   }
@@ -229,7 +239,7 @@ class EsbConfigGenerator {
     return getNodeCode(node).charAt(0) - 64
   }
 
-  def List<Peer> getRemotePeers(String site, String prefix) {
+  def List<Peer> getRemotePeers(String site, String prefix, openWirePort) {
     def remotePeers = []
     def remoteSites = this.sites.findAll { it != site }
     remoteSites.collect { remoteSite ->
